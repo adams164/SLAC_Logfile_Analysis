@@ -1,3 +1,46 @@
+import cPickle,socket,os
+
+def buildInstIPMap(ip_listing,existing_mapping={}):
+    total=0
+    mapping=existing_mapping
+    for ip in ip_listing:
+        if ip_listing[ip]>=50:
+            host = socket.getfqdn(ip)
+            #location_log[host]=ip_listing[ip]
+            total+=1
+            loc_bits = host.split('.')
+            name=''
+            if loc_bits[-1]=="edu":
+                name = loc_bits[-2]
+            elif loc_bits.count("ac")>=1:
+                name = loc_bits[loc_bits.index("ac")-1]
+            elif "cern.ch" in host:
+                name ="cern"
+            elif "fnal.gov" in host:
+                name = "fnal"
+    
+            ip_block=ip.split('.')[0]+'.'+ip.split('.')[1]+"."
+            if name!='':
+                if ip_block in mapping:
+                    if not name == mapping[ip_block]:
+                        print "oh snap!"
+                else:
+                    mapping[ip_block]=name
+            if total%100 == 0:
+                print total
+    return mapping
+
+def getInstIPMap(ip_listing,force_new=False):
+    if os.path.isfile("inst.dict"):
+        mapping=cPickle.load(open("inst.dict",'rb'))
+        if force_new:
+            mapping=buildInstIPMap(ip_listing,mapping)
+            cPickle.dump(mapping,open("inst.dict",'wb'))
+    else:
+        mapping=buildInstIPMap(ip_listing)
+        cPickle.dump(mapping, open("inst.dict",'wb'))
+    return mapping
+
 ip_ignore=[
 '137.138.124.253',   
 '209.85.238.209',

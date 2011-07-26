@@ -75,7 +75,7 @@ def readLogFile(filename,write_to,spires_log=False,alldata=False):
                 continue
             time_stamp = TIME_STAMP.search(line).group('time')
             date = datetime.datetime(*(time.strptime(time_stamp,"%d/%b/%Y:%H:%M:%S")[0:6]))
-            if date.month==6 and date.day>1:
+            if (date.month==6 and date.day>1) or alldata:
                 num_records+=1
                 referrer = line.split('"')[3]
                 search_term = urllib.unquote(SEARCH.search(line).group('term').lower().replace('+', ' '))

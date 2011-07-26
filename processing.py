@@ -143,7 +143,7 @@ def extractData(data_list,search_data=True,result_data=True,
     unique_ip_searches=len(ip_listing)
     search_data=(searches,authors_dict,title_dict,eprint_dict)
     result_data=(result_list,author_result_list,title_result_list,eprint_result_list)
-    term_data=(spires_terms,spires_term_count)
+    term_data=(spires_terms,spires_term_count,searches)
     IP_data=(ip_listing,unique_ip_searches)
     session_data=ip_listpair
     packaged_data=(search_data,result_data,term_data,IP_data,session_data)

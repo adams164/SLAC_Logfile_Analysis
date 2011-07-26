@@ -123,11 +123,11 @@ def analyzeSearchData(data,save_dir):
     g3.xlabel('Number of search counts')
     g3.ylabel('Percentage of searches')
     g3.plot(data_eprint)
-    ans = raw_input('Enter to quit ("save" to save plots): ')
-    if ans == 'save':
-        g1.hardcopy(save_dir+'data_author.png',terminal = 'png')
-        g2.hardcopy(save_dir+'data_title.png', terminal = 'png')
-        g3.hardcopy(save_dir+'data_eprint.png', terminal = 'png')
+    #ans = raw_input('Enter to quit ("save" to save plots): ')
+    #if ans == 'save':
+    g1.hardcopy(save_dir+'data_author.png',terminal = 'png')
+    g2.hardcopy(save_dir+'data_title.png', terminal = 'png')
+    g3.hardcopy(save_dir+'data_eprint.png', terminal = 'png')
     g1.reset()
     g2.reset()
     g3.reset()
@@ -168,10 +168,10 @@ def analyzeSessionData(data,save_dir):
     g_s_s('set logscale y')
     g_s_t.plot(data_s_t,data_s_t_m,data_s_t_o)
     g_s_s.plot(data_s_s,data_s_s_m,data_s_s_o)
-    ans=raw_input('Enter to quit ("save" to save plots): ')
-    if ans == 'save':
-        g_s_t.hardcopy(save_dir+'data_session_time.png',terminal='png')
-        g_s_s.hardcopy(save_dir+'data_session_searches.png',terminal='png')
+    #ans=raw_input('Enter to quit ("save" to save plots): ')
+    #if ans == 'save':
+    g_s_t.hardcopy(save_dir+'data_session_time.png',terminal='png')
+    g_s_s.hardcopy(save_dir+'data_session_searches.png',terminal='png')
     g_s_t.reset()
     g_s_s.reset()
 
@@ -186,33 +186,7 @@ def analyzeIPData(data,save_dir):
     location_log={}
     print unique_ip_searches
     loc_log_alt={}
-    '''for ip in ip_listing:
-        if ip_listing[ip]>=50:
-            host = socket.getfqdn(ip)
-            location_log[host]=ip_listing[ip]
-            total-=1
-            loc_bits = host.split('.')
-            name=''
-            if loc_bits[-1]=="edu":
-                name = loc_bits[-2]
-            elif loc_bits.count("ac")>=1:
-                name = loc_bits[loc_bits.index("ac")-1]
-            elif "cern.ch" in host:
-                name ="cern"
-            elif "fnal.gov" in host:
-                name = "fnal"
     
-            if name!='':
-                if name in loc_log_alt:
-                    loc_log_alt[name].append(ip)
-                else:
-                    loc_log_alt[name]=[ip]
-            if total%100 == 0:
-                print total
-    
-    for name, ip in loc_log_alt.iteritems():
-        if len(ip)>5:
-            print name +"  ----  "+str(ip)'''
         
     '''sorted_c=sorted(country_dict.iteritems(),key=operator.itemgetter(1))
     sorted_c_u=sorted(country_dict_unique.iteritems(),key=operator.itemgetter(1))
@@ -282,8 +256,8 @@ def analyzeResultData(data,save_dir):
     g_t.plot(data_t)
     g_e('set logscale xy')
     g_e.plot(data_e)
-    ans=raw_input('Enter to quit')
-    if ans == 's':
-        g.hardcopy(save_dir+'data_query_results.png',terminal = 'png')
+    #ans=raw_input('Enter to quit')
+    #if ans == 's':
+    g.hardcopy(save_dir+'data_query_results.png',terminal = 'png')
     g.reset()
     
