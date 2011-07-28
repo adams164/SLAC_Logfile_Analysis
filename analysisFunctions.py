@@ -1,4 +1,6 @@
 import numpy
+import dictionaries
+import Levenshtein
 
 def generateHistogram(data,linear=0):
     if linear==0:
@@ -18,9 +20,44 @@ def generateHistogram(data,linear=0):
     hist[113:]=hist[113:]/100
     return hist, bin_edge
 
+def sumValues(dict):
+    sum=0
+    for value in dict.itervalues():
+        sum+=value
+    return sum
+
+def getKeywords(search_term):
+    keywords_found={}
+    index=0
+    full_terms=search_term.split(" ")
+    for term in full_terms:
+        if term in dictionaries.StI:
+            cur_pos=1
+            value_term=[]
+            while cur_pos+index<len(full_terms):
+                cur_term = full_terms[cur_pos+index]
+                if not cur_term in dictionaries.dividers:
+                    value_term.append(cur_term)
+                else:
+                    break
+            keywords_found.append((dictionaries[term]," ".join(value_term)))
+        elif ":" in term:
+            keywords_found.append((term,term.split(":")[1]+":"))
+        index+=1
+    return keywords_found
+
+def compareTermDict(term1, term2):
+    if len(term1)==len(term2):
+        for kv1,kv2 in zip(term1,term2):
+            if kv1[0]!=kv2[0] and Levenshtein.ratio(kv1[1],kv2[2])<.5:
+                    return False
+        return True
+    else:
+        return False
+
 def similarQueries(query1, query2):
     if query1 and query2:
-        if query1!=query2:
+        if query1!=query2 and not("recid:" in query1 or "recid:" in query2):
             if abs(len(query1.split(" "))-len(query2.split(" ")))<3:
                 return True
             else:

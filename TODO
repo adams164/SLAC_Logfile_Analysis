@@ -1,0 +1,9 @@
+Old frustration metric:
+	+-3 terms compared to last non-identical search
+
+Idea:
+	Split term up into keyword-value pairs
+	Compare number of keywords--not identical = not similar
+	Number of keywords the same: compare values (levenshtein)
+	
+	Frustration marked by percentage of searches which are frustrated

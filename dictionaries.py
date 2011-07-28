@@ -57,6 +57,11 @@ ip_ignore=[
 '220.181.51.76',
 '220.181.51.77',
     ]
+dividers=[
+          'and',
+          'or',
+          'not',          
+          ]
 StI = {
     'find' : 'find',
     'fin' : 'find',
@@ -209,37 +214,37 @@ StI = {
         'tc' : '690C_a:',
         'ty' : '690C_a:',
         'type' : '690C_a:',
-        'type-code' : '690C_a',
+        'type-code' : '690C_a:',
         # field code
         'f' : '65017a:',
         'fc' : '65017a:',
         'field' : '65017a:',
         'field-code' : '65017a:',
         # coden
-        'bc' : 'coden',
-        'browse-only-indx' : 'coden',
-        'coden' : 'coden',
-        'journal-coden' : 'coden',
+        'bc' : 'coden:',
+        'browse-only-indx' : 'coden:',
+        'coden' : 'coden:',
+        'journal-coden' : 'coden:',
         # energy
-        'e' : 'energy',
-        'energy' : 'energy',
-        'energyrange-code' : 'energy',
+        'e' : 'energy:',
+        'energy' : 'energy:',
+        'energyrange-code' : 'energy:',
         # exact experiment number
-        'ee' : 'exact-experiment',
-        'exact-exp' : 'exact-experiment',
-        'exact-expno' : 'exact-experiment',
+        'ee' : 'exact-experiment:',
+        'exact-exp' : 'exact-experiment:',
+        'exact-expno' : 'exact-experiment:',
         # hidden note
-        'hidden-note' : 'hidden-note',
-        'hn' : 'hidden-note',
+        'hidden-note' : 'hidden-note:',
+        'hn' : 'hidden-note:',
         # ppf
-        'ppf' : 'ppf',
-        'ppflist' : 'ppf',
+        'ppf' : 'ppf:',
+        'ppflist' : 'ppf:',
         # slac topics
-        'ppfa' : 'slac-topics',
-        'slac-topics' : 'slac-topics',
-        'special-topics' : 'slac-topics',
-        'stp' : 'slac-topics',
+        'ppfa' : 'slac-topics:',
+        'slac-topics' : 'slac-topics:',
+        'special-topics' : 'slac-topics:',
+        'stp' : 'slac-topics:',
         # test index
-        'test' : 'test',
-        'testindex' : 'test',
+        'test' : 'test:',
+        'testindex' : 'test:',
     }
