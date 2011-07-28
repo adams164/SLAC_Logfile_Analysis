@@ -5,16 +5,20 @@ from invenio.websearch_webinterface import wash_search_urlargd
 def getQueryResults(url):
     """Run a search url to get search results"""
     #return random.randint(0,50)
-    url_split=urlparse.urlparse(url)[4]
-    #print url_split
-    argd = wash_search_urlargd(cgi.parse_qs(url_split))
-    argd['of']="id"
+    argd=urlArgs(url)
     #print argd
     try:
         num=len(perform_request_search(None, **argd))
     except:
         num=0
     return num
+
+def urlArgs(url):
+    url_split=urlparse.urlparse(url)[4]
+    #print url_split
+    argd = wash_search_urlargd(cgi.parse_qs(url_split))
+    argd['of']="id"
+    return argd
 
 def readLogFile(filename,write_to,spires_log=False,alldata=False):
     """Extract search queries from a logfile
@@ -47,6 +51,7 @@ def readLogFile(filename,write_to,spires_log=False,alldata=False):
                 results = -1#getQueryResults(query_url)
                 ip_address = line.split()[2]
                 #print str(time_stamp)+"-"+str(results)
+                other_args = None 
                 data.append([ip_address,search_term,results,time_stamp,referrer])
                 if num_records==100000:
                     cPickle.dump(data,open(write_to+".part"+str(dumps),'wb'))
@@ -83,6 +88,7 @@ def readLogFile(filename,write_to,spires_log=False,alldata=False):
                 results = -1#getQueryResults(query_url)
                 ip_address = line.split()[0]
                 #print str(time_stamp)+"-"+str(results)
+                other_args = urlArgs(query_url)
                 data.append([ip_address,search_term,results,time_stamp,referrer])
                 if num_records==100000:
                     cPickle.dump(data,open(write_to+".part"+str(dumps),'wb'))

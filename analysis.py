@@ -1,6 +1,7 @@
-import numpy,Gnuplot,operator,copy
-from analysisFunctions import generateHistogram
+import numpy,re,Gnuplot,operator,copy
+from analysisFunctions import generateHistogram,similarQueries
 import matplotlib.pyplot as plt
+import GeoIP
 
 #read_from = raw_input("Read from:")
 
@@ -132,7 +133,56 @@ def analyzeSearchData(data,save_dir):
     g2.reset()
     g3.reset()
 
-def analyzeSessionData(data,save_dir):
+def processSessionData(ip_listpair):
+    session_time=[]
+    session_searches=[]
+    st_from_main=[]
+    ss_from_main=[]
+    st_from_others=[]
+    ss_from_others=[]
+    num_sessions=0
+    num_single_sessions=0
+    session_metric=[]
+    #discriminator=10
+    
+    MAIN = re.compile("(http:\/\/inspirebeta.net\/)(|\?ln=en)")
+    
+    for session in ip_listpair:
+        session_searches.append(session[1])
+        delta=abs(session[2]-session[3])
+        session_time.append(delta.seconds)
+        num_sessions+=1
+        if session[4]!='':
+            if MAIN.search(session[4]):
+                st_from_main.append(delta.seconds)
+                ss_from_main.append(session[1])
+            else:
+                st_from_others.append(delta.seconds)
+                ss_from_others.append(session[1])
+        if session[1]==1:
+            num_single_sessions+=1
+        #if delta.seconds>0:
+            #session_metric.append(session[1]/(delta.seconds/float(60)))
+        re_searches=0
+        last_search=''
+        for search in session[5]:
+            term = search[0]
+            if similarQueries(last_search,term):
+                re_searches+=1
+            last_search=term
+        if session[1]<250:
+            if re_searches>20:
+                print "IP --- "+session[0]+" --- "+str(re_searches)
+                for search in session[5]:
+                    print str(search[0])
+            session_metric.append(re_searches)
+    packaged_session_data=(st_from_main,ss_from_main,st_from_others,ss_from_others,
+                           session_time,session_searches,num_sessions,
+                           num_single_sessions,session_metric)
+    return packaged_session_data
+
+def analyzeSessionData(raw_data,save_dir):
+    data = processSessionData(raw_data)
     st_from_main,ss_from_main,st_from_others,ss_from_others,\
     session_time,session_searches,num_sessions,num_single_sessions,session_metric=data
     hist_st_main, bin_edge = generateHistogram(st_from_main)
@@ -145,7 +195,8 @@ def analyzeSessionData(data,save_dir):
     print "Number of single search sessions: " + str(num_single_sessions)
     #session_final=[]
     #axes([.2,.2,.7,.7])
-    plt.hist(session_metric)
+    plt.hist(session_metric,50,log=True)
+    print sorted(session_metric)[-10:]
     plt.show()
     '''for searches,time in zip(session_searches,session_time):
         if not [searches,time] in session_final:
@@ -184,9 +235,10 @@ def analyzeSpiresTermData(data,save_dir):
 def analyzeIPData(data,save_dir):
     ip_listing,unique_ip_searches=data
     location_log={}
-    print unique_ip_searches
+    print "Unique IP searches: " + str(unique_ip_searches)
     loc_log_alt={}
     
+    gi=GeoIP.new(GeoIP.GEOIP_MEMORY_CACHE)
         
     '''sorted_c=sorted(country_dict.iteritems(),key=operator.itemgetter(1))
     sorted_c_u=sorted(country_dict_unique.iteritems(),key=operator.itemgetter(1))

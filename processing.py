@@ -43,7 +43,7 @@ def getProcessedLogs(read_from):
 
 
 
-def extractData(data_list,search_data=True,result_data=True,
+def extractData(data_list,save_location,search_data=True,result_data=True,
                 IP_data=True,session_data=True,term_data=True):
     """Turn the logfile data into usable formats
     
@@ -71,7 +71,7 @@ def extractData(data_list,search_data=True,result_data=True,
     spires_term_count=0
     session_timeout=datetime.timedelta(minutes=timeout)
     ip_ignore = dictionaries.ip_ignore#session_list=[]
-    
+       
     for data in data_list:
         print "running file " +str(number)
         number+=1
@@ -87,7 +87,7 @@ def extractData(data_list,search_data=True,result_data=True,
             except ValueError:
                 date = datetime.datetime(*(time.strptime(entry[3],"%Y%m%d %H:%M:%S")[0:6]))
             referrer = entry[4]
-            
+            #args = entry[5]
             
             
             # Search results data recording
@@ -139,52 +139,29 @@ def extractData(data_list,search_data=True,result_data=True,
                     ip_listing[ip]=1
                 else:
                     ip_listing[ip]+=1
+                    
+    for ip in ip_active:
+        ip_listpair.append((ip,ip_active[ip][0],ip_active[ip][1],ip_active[ip][2],ip_active[ip][3],ip_active[ip][4]))
     
     unique_ip_searches=len(ip_listing)
-    search_data=(searches,authors_dict,title_dict,eprint_dict)
-    result_data=(result_list,author_result_list,title_result_list,eprint_result_list)
-    term_data=(spires_terms,spires_term_count,searches)
-    IP_data=(ip_listing,unique_ip_searches)
-    session_data=ip_listpair
-    packaged_data=(search_data,result_data,term_data,IP_data,session_data)
+    search_data_p=(searches,authors_dict,title_dict,eprint_dict)
+    result_data_p=(result_list,author_result_list,title_result_list,eprint_result_list)
+    term_data_p=(spires_terms,spires_term_count,searches)
+    IP_data_p=(ip_listing,unique_ip_searches)
+    session_data_p=ip_listpair
+       
+    log_data=cPickle.load(open(save_location,'rb'))
+    if not search_data:
+        search_data_p=log_data[0]
+    if not result_data:
+        result_data_p=log_data[1]
+    if not term_data:
+        term_data_p=log_data[2]
+    if not IP_data:
+        IP_data_p=log_data[3]
+    if not session_data:
+        session_data_p=log_data[4]
+    
+    packaged_data=(search_data_p,result_data_p,term_data_p,IP_data_p,session_data_p)
     return packaged_data
     
-def processSessionData(ip_listpair):
-    session_time=[]
-    session_searches=[]
-    st_from_main=[]
-    ss_from_main=[]
-    st_from_others=[]
-    ss_from_others=[]
-    num_sessions=0
-    num_single_sessions=0
-    session_metric=[]
-    
-    MAIN = re.compile("(http:\/\/inspirebeta.net\/)(|\?ln=en)")
-    
-    for session in ip_listpair:
-        session_searches.append(session[1])
-        delta=abs(session[2]-session[3])
-        session_time.append(delta.seconds)
-        num_sessions+=1
-        if session[4]!='':
-            if MAIN.search(session[4]):
-                st_from_main.append(delta.seconds)
-                ss_from_main.append(session[1])
-            else:
-                st_from_others.append(delta.seconds)
-                ss_from_others.append(session[1])
-        if session[1]==1:
-            num_single_sessions+=1
-        if delta.seconds>0:
-            session_metric.append(session[1]/delta.seconds)
-        '''prev_time = session[2]
-        for search in session[5]:
-            cur_time=search[1]
-            time_dif=abs(prev_time-cur_time)
-            if time_dif<discriminator:
-                quick_searches+=1'''
-    packaged_session_data=(st_from_main,ss_from_main,st_from_others,ss_from_others,
-                           session_time,session_searches,num_sessions,
-                           num_single_sessions,session_metric)
-    return packaged_session_data
