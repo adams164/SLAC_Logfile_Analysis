@@ -46,7 +46,7 @@ def readLogFile(filename,write_to,spires_log=False,alldata=False):
             if (date.month==6 and date.day>1) or alldata:
                 num_records+=1
                 referrer = ''
-                search_term = url
+                search_term = url.split('( in hep')[0]
                 #query_url = 'https://inspire.slac.stanford.edu'+line.split('"')[1].split(' ')[1]
                 results = -1#getQueryResults(query_url)
                 ip_address = line.split()[2]

@@ -15,9 +15,10 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
     to allow easy manipulation of specific steps
     """
     print "Reading Log: "+filename+".log"
-    spires_log=(raw_input("SPIRES style logfile(y/n)? ")=="y")
+    
     processed_file_exists=os.path.isdir(base_dir+"proc/"+filename)
     if force_read or not processed_file_exists:
+        spires_log=(raw_input("SPIRES style logfile(y/n)? ")=="y")
         if not processed_file_exists:
             os.makedirs(base_dir+"proc/"+filename)
         parsing.readLogFile(base_dir+"logs/"+filename+".log", base_dir+"proc/"+filename+"/log", spires_log,True)
@@ -35,22 +36,34 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
     else:
         log_data=cPickle.load(open(base_dir+"data/"+filename+"/log_data",'rb'))
     
-    search_data,result_data,term_data,IP_data,session_data=log_data
+    search_data_p,result_data_p,term_data_p,IP_data_p,session_data_p=log_data
     #session_data=processing.processSessionData(raw_session_data)
     
     print "Building Institution Map"
-    dictionaries.getInstIPMap(IP_data[0], new_mapping)
+    dictionaries.getInstIPMap(IP_data_p[0], new_mapping)
     
     print "Analyzing Data"
     if not os.path.isdir(base_dir+"proc_data/"+filename):
         os.makedirs(base_dir+"proc_data/"+filename)
     save_dir=base_dir+"proc_data/"+filename+"/"
-    #analysis.analyzeResultData(result_data, save_dir) # Broken
-    #analysis.analyzeIPData(IP_data, save_dir) # Broken
-    #analysis.analyzeSearchData(search_data, save_dir) # Processing Broken
-    analysis.analyzeSessionData(session_data, save_dir)
-    analysis.analyzeSpiresTermData(term_data, save_dir)
+    search_ret,result_ret,term_ret,IP_ret,session_ret=[],[],[],[],[]
+    #analysis.analyzeResultData(result_data_p, save_dir) # Broken
+    if IP_data:
+        IP_ret = analysis.analyzeIPData(IP_data_p, save_dir) # Broken
+    #analysis.analyzeSearchData(search_data_p, save_dir) # Processing Broken
+    if session_data:
+        session_ret = analysis.analyzeSessionData(session_data_p, save_dir)
+    if term_data:
+        term_ret = analysis.analyzeSpiresTermData(term_data_p, save_dir)
     print "Done"
+    return (search_ret,result_ret,term_ret,IP_ret,session_ret)
+
+def compareIPAnalysis(log1,log2):
+    IP_log_1_ret = fullPipeline(log1, search_data=False, result_data=False,
+                                session_data=False, term_data=False)[3]
+    IP_log_2_ret = fullPipeline(log2, search_data=False, result_data=False,
+                                session_data=False, term_data=False)[3]
+    
 
 def main(val=False):
     """Main control loop"""
@@ -92,13 +105,19 @@ def main(val=False):
                 data_set=True
             if "-n" in segments:
                 new_mapping=True
-            if data_set:
-                fullPipeline(segments[0],force_processing,
-                             force_read,search_data,result_data,IP_data,
-                             session_data,term_data,new_mapping)
+            if segments[0]=="compareIP":
+                compareIPAnalysis(segments[1], segments[2])
+            elif data_set:
+                for logname in segments:
+                    if '-'!=logname[0]:
+                        fullPipeline(logname,force_processing,
+                                     force_read,search_data,result_data,IP_data,
+                                     session_data,term_data,new_mapping)
             else:
-                fullPipeline(segments[0],force_processing=force_processing,
-                             force_read=force_read,new_mapping=new_mapping)
+                for logname in segments:
+                    if '-'!=logname[0]:
+                        fullPipeline(logname,force_processing=force_processing,
+                                     force_read=force_read,new_mapping=new_mapping)
         input_stream=raw_input("> ")
         
         

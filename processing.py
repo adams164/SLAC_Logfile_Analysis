@@ -125,13 +125,13 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
                     time_dif = abs(date-ip_active[ip][1])
                     if time_dif > session_timeout:
                         ip_listpair.append((ip,ip_active[ip][0],ip_active[ip][1],ip_active[ip][2],ip_active[ip][3],ip_active[ip][4]))
-                        ip_active[ip]=[0,date,date,referrer,[(search_term,date)]]
+                        ip_active[ip]=[1,date,date,referrer,[(search_term,date)]]
                     else:
                         ip_active[ip][0]+=1
                         ip_active[ip][1]=date
                         ip_active[ip][4].append((search_term,date))
                 else:
-                    ip_active[ip]=[0,date,date,referrer,[(search_term,date)]]
+                    ip_active[ip]=[1,date,date,referrer,[(search_term,date)]]
             
             # IP data recording
             if IP_data:
@@ -149,18 +149,19 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     term_data_p=(spires_terms,spires_term_count,searches)
     IP_data_p=(ip_listing,unique_ip_searches)
     session_data_p=ip_listpair
-       
-    log_data=cPickle.load(open(save_location,'rb'))
-    if not search_data:
-        search_data_p=log_data[0]
-    if not result_data:
-        result_data_p=log_data[1]
-    if not term_data:
-        term_data_p=log_data[2]
-    if not IP_data:
-        IP_data_p=log_data[3]
-    if not session_data:
-        session_data_p=log_data[4]
+    
+    if os.path.isfile(save_location):
+        log_data=cPickle.load(open(save_location,'rb'))
+        if not search_data:
+            search_data_p=log_data[0]
+        if not result_data:
+            result_data_p=log_data[1]
+        if not term_data:
+            term_data_p=log_data[2]
+        if not IP_data:
+            IP_data_p=log_data[3]
+        if not session_data:
+            session_data_p=log_data[4]
     
     packaged_data=(search_data_p,result_data_p,term_data_p,IP_data_p,session_data_p)
     return packaged_data
