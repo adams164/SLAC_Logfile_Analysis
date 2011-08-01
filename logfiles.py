@@ -28,16 +28,23 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
     if force_processing or not log_data_exists:
         if not log_data_exists:
             os.makedirs(base_dir+"data/"+filename)
-        raw_data=processing.getProcessedLogs(base_dir+"proc/"+filename+"/log")
+        raw_data=processing.readDataFile(base_dir+"proc/"+filename+"/log")
         log_data=processing.extractData(raw_data,base_dir+"data/"+filename+"/log_data",
                                         search_data,result_data,IP_data,
                                         session_data,term_data)
-        cPickle.dump(log_data,open(base_dir+"data/"+filename+"/log_data",'wb'))
+        #cPickle.dump(log_data,open(base_dir+"data/"+filename+"/log_data",'wb'))
+        processing.writeDataParts(log_data,base_dir+"data/"+filename+"/log_data")
     else:
-        log_data=cPickle.load(open(base_dir+"data/"+filename+"/log_data",'rb'))
+        log_data=processing.readDataFile(base_dir+"data/"+filename+"/log_data")
     
-    search_data_p,result_data_p,term_data_p,IP_data_p,session_data_p=log_data
+    search_data_p=log_data[0]
+    result_data_p=log_data[1]
+    term_data_p=log_data[2]
+    IP_data_p=log_data[3]
+    session_data_parts=log_data[4:]
     #session_data=processing.processSessionData(raw_session_data)
+    session_data_p=[session for part in session_data_parts for session in part]
+    
     
     print "Building Institution Map"
     dictionaries.getInstIPMap(IP_data_p[0], new_mapping)
@@ -63,7 +70,9 @@ def compareIPAnalysis(log1,log2):
                                 session_data=False, term_data=False)[3]
     IP_log_2_ret = fullPipeline(log2, search_data=False, result_data=False,
                                 session_data=False, term_data=False)[3]
-    
+    save_dir1=base_dir+"proc_data/"+log1+"/"
+    save_dir2=base_dir+"proc_data/"+log2+"/"                            
+    analysis.analyzeIPDataCompare(IP_log_1_ret, IP_log_2_ret, save_dir1, save_dir2)
 
 def main(val=False):
     """Main control loop"""

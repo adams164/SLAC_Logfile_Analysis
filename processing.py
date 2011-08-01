@@ -24,8 +24,27 @@ EPRINT = re.compile('(\d{4}[.]\d{4}|\w+\-\w+\/\d{7})')
 import dictionaries
 _SPIRES_TO_INVENIO_KEYWORDS_MATCHINGS = dictionaries.StI
 
-def getProcessedLogs(read_from):
-    """Read in the logfile data from pickle files"""
+def readDataFileExt(read_from):
+    """Read in the file data from pickle files"""
+    data_list=[]
+    #read_from = raw_input("Read Data From: ")
+    single_file = os.path.isfile(read_from)
+    #file_read_from=os.path.split(read_from)[1]
+    if single_file:
+        data_list.extend(open(read_from, 'rb').read())
+    else:
+        file_parts=os.path.split(read_from)
+        list_files=os.listdir(file_parts[0])
+        for filename in sorted(list_files):
+            if filename.find(file_parts[1]+'.') == 0:
+                print "reading "+filename
+                data_list.extend((open(file_parts[0]+'/'+filename,'rb').read()))
+    ret_data_list = cPickle.loads(''.join(data_list))            
+    return ret_data_list
+
+
+def readDataFile(read_from):
+    """Read in the file data from pickle files"""
     data_list=[]
     #read_from = raw_input("Read Data From: ")
     single_file = os.path.isfile(read_from)
@@ -35,14 +54,17 @@ def getProcessedLogs(read_from):
     else:
         file_parts=os.path.split(read_from)
         list_files=os.listdir(file_parts[0])
-        for filename in list_files:
+        for filename in sorted(list_files):
             if filename.find(file_parts[1]+'.') == 0:
                 print "reading "+filename
                 data_list.append(cPickle.load(open(file_parts[0]+'/'+filename,'rb')))
     return data_list
 
-
-
+def writeDataParts(data,write_to):
+    i=1
+    for item in data:
+        cPickle.dump(item,open(write_to+".part"+str(i).zfill(2),'wb'))
+        i+=1
 def extractData(data_list,save_location,search_data=True,result_data=True,
                 IP_data=True,session_data=True,term_data=True):
     """Turn the logfile data into usable formats
@@ -150,8 +172,20 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     IP_data_p=(ip_listing,unique_ip_searches)
     session_data_p=ip_listpair
     
+    session_data_parts=[]
+    count=0
+    list_build=[]
+    for session in session_data_p:
+        count+=1
+        list_build.append(session)
+        if count>=50000:
+            session_data_parts.append(list_build)
+            list_build=[]
+            count = 0
+    
     if os.path.isfile(save_location):
-        log_data=cPickle.load(open(save_location,'rb'))
+        
+        log_data=readDataFile(save_location)
         if not search_data:
             search_data_p=log_data[0]
         if not result_data:
@@ -161,8 +195,9 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
         if not IP_data:
             IP_data_p=log_data[3]
         if not session_data:
-            session_data_p=log_data[4]
+            session_data_parts=log_data[4:]
     
-    packaged_data=(search_data_p,result_data_p,term_data_p,IP_data_p,session_data_p)
+    packaged_data=[search_data_p,result_data_p,term_data_p,IP_data_p]
+    packaged_data.extend(session_data_parts)
     return packaged_data
     

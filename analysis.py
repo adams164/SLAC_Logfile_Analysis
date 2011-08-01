@@ -1,6 +1,7 @@
 import numpy,re,Gnuplot,operator,copy
 from analysisFunctions import *
 import matplotlib.pyplot as plt
+from matplotlib import axes
 import GeoIP
 import matplotlib
 from pylab import *
@@ -278,30 +279,139 @@ def analyzeSpiresTermData(data,save_dir):
     print searches
     print spires_terms
     print spires_term_count
+
+def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
+    ip_listing1=data1
+    ip_listing2=data2
+    
+    ip1=dict([(k,v) for k,v in ip_listing1.iteritems() if not k in ip_listing2])
+    ip2=dict([(k,v) for k,v in ip_listing2.iteritems() if not k in ip_listing1])
+    both1=dict([(k,v) for k,v in ip_listing1.iteritems() if k in ip_listing2])
+    both2=dict([(k,v) for k,v in ip_listing2.iteritems() if k in ip_listing1])
+    
+    ip1=ip_listing1
+    ip2=ip_listing2
+    
+    num1=sumValues(ip1)
+    num2=sumValues(ip2)
+    
+    print sumValues(ip_listing1)
+    print sumValues(ip_listing2)
+    print sumValues(ip1)
+    print sumValues(ip2)
+    print sumValues(both1)
+    print sumValues(both2)
+    
+    location_log_ip1=reduceFractions(IPToCountry(ip1),0.05)
+    location_log_ip2=reduceFractions(IPToCountry(ip2),0.05)
+    location_log_both1=reduceFractions(IPToCountry(both1),0.05)
+    location_log_both2=reduceFractions(IPToCountry(both2),0.05)
+    
+    for country in location_log_ip1:
+        if not country in location_log_ip2:
+            location_log_ip2[country]=0
+        if not country in location_log_both1:
+            location_log_both1[country]=0
+        if not country in location_log_both2:
+            location_log_both2[country]=0
+    for country in location_log_both2:
+        if not country in location_log_ip2:
+            location_log_ip2[country]=0
+        if not country in location_log_both1:
+            location_log_both1[country]=0
+        if not country in location_log_ip1:
+            location_log_ip1[country]=0
+    for country in location_log_both1:
+        if not country in location_log_ip2:
+            location_log_ip2[country]=0
+        if not country in location_log_ip1:
+            location_log_ip1[country]=0
+        if not country in location_log_both2:
+            location_log_both2[country]=0
+    for country in location_log_ip2:
+        if not country in location_log_ip1:
+            location_log_ip1[country]=0
+        if not country in location_log_both1:
+            location_log_both1[country]=0
+        if not country in location_log_both2:
+            location_log_both2[country]=0
+    
+    keys_ip1,values_ip1=zip(*sorted(location_log_ip1.iteritems()))
+    keys_ip2,values_ip2=zip(*sorted(location_log_ip2.iteritems()))
+    keys_both1,values_both1=zip(*sorted(location_log_both1.iteritems()))
+    keys_both2,values_both2=zip(*sorted(location_log_both2.iteritems()))
+    
+    combined=zip(keys_ip1,values_ip1,values_ip2,values_both1,values_both2)
+    sort_comb = sorted(combined,key=operator.itemgetter(1))
+    sort_comb.reverse()
+    keys,values_ip1,values_ip2,values_both1,values_both2=zip(*sort_comb)
+    ratio=float(num1)/float(num2)
+
+    values_ip2 = [value*ratio for value in values_ip2]
+    values_both2 = [value*ratio for value in values_both2]
+        
+    values=zip(values_ip1,values_both1,values_both2,values_ip2)
+    
+    
+    values=values
+    colors=['#4575D4','#FFCE40','#1144AA','#FFBE00','#6B8FD4','#FFDB73',]
+    rows=len(values)
+    
+    ind = array([0.0,1.0,3.0,4.0])+.3
+    width=0.4
+    yoff=array([0.0,0.0,0.0,0.0])
+    for row in xrange(rows):
+        bar(ind,values[row],width,bottom=yoff,color=colors[row%len(colors)])
+        for i in xrange(4):
+            if values[row][i]>0:
+                style=dict(arrowstyle="->")    
+                annotate(keys[row],xy=(ind[i]+width,yoff[i]+values[row][i]/2),
+                         xytext=(2.2,averageList(yoff)+averageList(values[row])/2 -.1),
+                         arrowprops=style)
+        yoff=yoff+values[row]
+    axes1=gca()
+    fig1=gcf()
+    fig1.set_size_inches(8,8)
+    axes2=axes1.twinx()
+    axes2.set_ylim(0,axes1.get_ylim()[1]/ratio)
+    axes1.set_xticks(ind+width/2)
+    axes1.set_xticklabels([save_dir1.split("/")[-2],"Both","Both",save_dir2.split("/")[-2]])
+    savefig(save_dir1+'barIPdataCompare.png',dpi=150)
+    savefig(save_dir2+'barIPdataCompare.png',dpi=150)
+    clf()
     
 def analyzeIPData(data,save_dir):
     ip_listing,unique_ip_searches=data
     location_log={}
     print "Unique IP searches: " + str(unique_ip_searches)
     
-    location_log=reduceFractions(IPToCountry(ip_listing))
+    location_log=reduceFractions(IPToCountry(ip_listing),.02)
     
     loc_log_alt=sorted(location_log.iteritems(),key=operator.itemgetter(1))
     loc_log_alt.reverse()
     keys,values=zip(*loc_log_alt)
     
     values=values
-    colors=['red','blue','green']
+    colors=['#4575D4','#FFCE40','#1144AA','#FFBE00','#6B8FD4','#FFDB73',]
     rows=len(values)
     
     ind = arange(1)+.3
     width=0.4
     yoff=array([0.0])
     for row in xrange(rows):
-        bar(ind,values[row],width,bottom=yoff,color=colors[row%3])
+        bar(ind,values[row],width,bottom=yoff,color=colors[row%len(colors)])
+        annotate(keys[row],xy=(ind[0]+width,yoff[0]+values[row]/2),
+                 xytext=(ind[0]+width+.1,yoff[0]+values[row]/2),
+                 arrowprops=dict(arrowstyle="->"))
         yoff=yoff+values[row]
-    show()
-            
+    axes1=gca()
+    fig1=gcf()
+    fig1.set_size_inches(8,8)
+    axes1.set_xlim([0,1.5])
+    axes1.set_xticks(ind+width/2)
+    axes1.set_xticklabels([save_dir.split("/")[-2]])
+    savefig(save_dir+'barIPdata.png',dpi=150)
+    clf()   
     return ip_listing
     '''sorted_c=sorted(country_dict.iteritems(),key=operator.itemgetter(1))
     sorted_c_u=sorted(country_dict_unique.iteritems(),key=operator.itemgetter(1))

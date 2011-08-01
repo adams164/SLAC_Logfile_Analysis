@@ -24,18 +24,29 @@ def generateHistogram(data,linear=0):
     hist[113:]=hist[113:]/100
     return hist, bin_edge
 
+def averageList(av_list):
+    total=sum(av_list)
+    count=0
+    for item in av_list:
+        if item>0:
+            count+=1
+    if count>0:
+        return (float(total)/float(count))
+    else:
+        return 0
+
 def sumValues(dict):
     sum=0
     for value in dict.itervalues():
         sum+=value
     return sum
 
-def reduceFractions(dict_enter):
+def reduceFractions(dict_enter,cutoff):
     dict = {}
     total=sumValues(dict_enter)
     dict['Others']=0
     for country in dict_enter:
-        if float(dict_enter[country])/float(total)<.01:
+        if float(dict_enter[country])/float(total)<cutoff:
             dict['Others']+=dict_enter[country]
         else:
             dict[country]=dict_enter[country]
