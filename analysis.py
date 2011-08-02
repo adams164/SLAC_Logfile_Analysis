@@ -292,12 +292,27 @@ def analyzeSpiresTermData(data,save_dir):
     #print spires_terms
     #print spires_term_count
 
-def analyzeUsage(session_data,save_dir,timescale='day'):
+def compareUsage(date_list1,date_list2,save_dir1,save_dir2,timescale="Days"):
+    plt = matplotlib.pyplot
+    log1_name = save_dir1.split("/")[-2]
+    log2_name = save_dir2.split("/")[-2]
+    plt.hold(True)
+    plt.plot(date_list1,'-or')
+    plt.plot(date_list2,'-ob')
+    axs1=plt.gca()
+    axs1.set_xlabel(timescale+" from start")
+    axs1.set_ylabel("Number of Multi-Search Sessions")
+    axs1.legend((log1_name,log2_name),loc=0)
+    plt.savefig(save_dir1+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
+    plt.savefig(save_dir2+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
+    plt.clf()
+    
+def analyzeUsage(session_data,save_dir,timescale='Days'):
     date_list=[]
     time_diff=datetime.timedelta(days=1)
-    if timescale=='day':
+    if timescale=='Days':
         time_diff_scale=datetime.timedelta(days=1)
-    elif timescale=='week':
+    elif timescale=='Weeks':
         time_diff_scale=datetime.timedelta(days=7)
     start=session_data[0][2]
     print start
@@ -314,9 +329,11 @@ def analyzeUsage(session_data,save_dir,timescale='day'):
     plt = matplotlib.pyplot
     plt.plot(date_list,'-o')
     axs1=plt.gca()
-    axs1.set_xlabel("Days from start")
+    axs1.set_xlabel(timescale+" from start")
     axs1.set_ylabel("Number of Multi-Search Sessions")
-    plt.show()
+    plt.savefig(save_dir+"UsageTimeline.png",dpi=150)
+    plt.clf()
+    return date_list
 
 def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
     ip_listing1=data1

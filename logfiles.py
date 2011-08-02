@@ -7,7 +7,8 @@ import dictionaries
 base_dir="/scratch/logfile_data/"
 
 def fullPipeline(filename,force_processing=False,force_read=False,search_data=True,result_data=True,
-                IP_data=True,session_data=True,term_data=True,new_mapping=False):
+                IP_data=True,session_data=True,term_data=True,usage_data=True,new_mapping=False,
+                timescale="Days"):
     """Completely process a logfile
     
     Goes through all the steps of processing and
@@ -53,7 +54,7 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
     if not os.path.isdir(base_dir+"proc_data/"+filename):
         os.makedirs(base_dir+"proc_data/"+filename)
     save_dir=base_dir+"proc_data/"+filename+"/"
-    search_ret,result_ret,term_ret,IP_ret,session_ret=[],[],[],[],[]
+    search_ret,result_ret,term_ret,IP_ret,session_ret,usage_ret=[],[],[],[],[],[]
     #analysis.analyzeResultData(result_data_p, save_dir) # Broken
     if IP_data:
         IP_ret = analysis.analyzeIPData(IP_data_p, save_dir) # Broken
@@ -62,9 +63,10 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
         session_ret = analysis.analyzeSessionData(session_data_p, save_dir)
     if term_data:
         term_ret = analysis.analyzeSpiresTermData(term_data_p, save_dir)
-    analysis.analyzeUsage(session_data_p, save_dir)
+    if usage_data:
+        usage_ret = analysis.analyzeUsage(session_data_p, save_dir,timescale)
     print "Done"
-    return (search_ret,result_ret,term_ret,IP_ret,session_ret)
+    return (search_ret,result_ret,term_ret,IP_ret,session_ret,usage_ret)
 
 def compareIPAnalysis(log1,log2):
     IP_log_1_ret = fullPipeline(log1, search_data=False, result_data=False,
@@ -72,8 +74,18 @@ def compareIPAnalysis(log1,log2):
     IP_log_2_ret = fullPipeline(log2, search_data=False, result_data=False,
                                 session_data=False, term_data=False)[3]
     save_dir1=base_dir+"proc_data/"+log1+"/"
-    save_dir2=base_dir+"proc_data/"+log2+"/"                            
+    save_dir2=base_dir+"proc_data/"+log2+"/"
     analysis.analyzeIPDataCompare(IP_log_1_ret, IP_log_2_ret, save_dir1, save_dir2)
+
+def compareUsageAnalysis(log1,log2,timescale):
+    usage_log_1_ret = fullPipeline(log1, IP_data=False, search_data=False, result_data=False,
+                                session_data=False, term_data=False,timescale=timescale)[5]
+    usage_log_2_ret = fullPipeline(log2, IP_data=False, search_data=False, result_data=False,
+                                session_data=False, term_data=False,timescale=timescale)[5]
+    save_dir1=base_dir+"proc_data/"+log1+"/"
+    save_dir2=base_dir+"proc_data/"+log2+"/"
+    analysis.compareUsage(usage_log_1_ret, usage_log_2_ret, save_dir1, save_dir2, timescale)
+    
 
 def main(val=False):
     """Main control loop"""
@@ -88,12 +100,18 @@ def main(val=False):
         term_data=False
         new_mapping=False
         data_set=False
+        date_start="20110602"
+        date_end="20110630"
         if input_stream == "run":
             fullPipeline("inspire-june-2011")
         elif input_stream == "force_process":
             fullPipeline("inspire-june-2011",force_processing=True)
         else:
             segments=input_stream.split(' ')
+            if "-date-start" in segments:
+                date_start=segments[segments.index("-date-start")+1]
+            if "-date-end" in segments:
+                date_end=segments[segments.index("-date-end")+1]
             if "-fr" in segments:
                 force_read=True
             if "-fp" in segments:
@@ -117,6 +135,12 @@ def main(val=False):
                 new_mapping=True
             if segments[0]=="compareIP":
                 compareIPAnalysis(segments[1], segments[2])
+            elif segments[0]=="compareUsage":
+                if len(segments)<4:
+                    timescale="Days"
+                else:
+                    timescale=segments[3]
+                compareUsageAnalysis(segments[1],segments[2],timescale)
             elif data_set:
                 for logname in segments:
                     if '-'!=logname[0]:
