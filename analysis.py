@@ -1,4 +1,4 @@
-import numpy,re,Gnuplot,operator,copy
+import numpy,re,Gnuplot,operator,copy,datetime
 from analysisFunctions import *
 import matplotlib.pyplot as plt
 from matplotlib import axes
@@ -264,7 +264,11 @@ def analyzeSessionData(raw_data,save_dir):
     data_s_t_o=Gnuplot.Data(bin_edge,hist_st_other,title="Session Time (from Other)")
     data_s_s_o=Gnuplot.Data(bin_edge_ss,hist_ss_other,title="Session Searches (from Other)")
     g_s_t('set logscale xy')
+    g_s_t.xlabel("Session Length (s)")
+    g_s_t.ylabel("Number of sessions")
     g_s_s('set logscale y')
+    g_s_s.xlabel("Number of Searches in Session")
+    g_s_s.ylabel("Number of sessions")
     g_s_t.plot(data_s_t,data_s_t_m,data_s_t_o)
     g_s_s.plot(data_s_s,data_s_s_m,data_s_s_o)
     #ans=raw_input('Enter to quit ("save" to save plots): ')
@@ -276,9 +280,43 @@ def analyzeSessionData(raw_data,save_dir):
 
 def analyzeSpiresTermData(data,save_dir):
     spires_terms,spires_term_count,searches=data
-    print searches
-    print spires_terms
-    print spires_term_count
+    print "=============SPIRES Term Data==============="
+    print "Total Searches: "+str(searches)
+    del spires_terms['find']
+    sorted_terms=sorted(spires_terms.iteritems(),key=operator.itemgetter(1))
+    sorted_terms.reverse()
+    
+    print "Common Search Terms:"
+    for term,count in sorted_terms[:10]:
+        print term+" -- "+str(count)
+    #print spires_terms
+    #print spires_term_count
+
+def analyzeUsage(session_data,save_dir,timescale='day'):
+    date_list=[]
+    time_diff=datetime.timedelta(days=1)
+    if timescale=='day':
+        time_diff_scale=datetime.timedelta(days=1)
+    elif timescale=='week':
+        time_diff_scale=datetime.timedelta(days=7)
+    start=session_data[0][2]
+    print start
+    for session in session_data:
+        ip=session[0]
+        searches=session[1]
+        session_date=session[2]
+        if searches>1:
+            time_diff=abs(start-session_date)
+            multiple=time_diff.days/time_diff_scale.days
+            while multiple>=len(date_list):
+                date_list.append(0)
+            date_list[multiple]+=1
+    plt = matplotlib.pyplot
+    plt.plot(date_list,'-o')
+    axs1=plt.gca()
+    axs1.set_xlabel("Days from start")
+    axs1.set_ylabel("Number of Multi-Search Sessions")
+    plt.show()
 
 def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
     ip_listing1=data1
@@ -364,21 +402,71 @@ def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
         bar(ind,values[row],width,bottom=yoff,color=colors[row%len(colors)])
         for i in xrange(4):
             if values[row][i]>0:
+                arrow_y=yoff[i]+values[row][i]/2
+                if i<=1:
+                    arrow_x=ind[i]+width
+                    if i==0:
+                        if values[row][i+1]>0:
+                            text=''
+                            text_x=ind[i+1]
+                            text_y=yoff[i+1]+values[row][i+1]/2
+                        else:
+                            text=keys[row]
+                            text_x=2.2
+                            text_y=arrow_y
+                    else:
+                        text=keys[row]
+                        text_x=2.2
+                        text_y=yoff[1]+values[row][1]/2
+                else:
+                    arrow_x=ind[i]
+                    if i==3:
+                        if values[row][i-1]>0:
+                            text=''
+                            text_x=ind[i-1]+width
+                            text_y=yoff[i-1]+values[row][i-1]/2
+                        else:
+                            text=keys[row]
+                            text_x=2.2
+                            text_y=arrow_y
+                    else:
+                        text=keys[row]
+                        text_x=2.2
+                        text_y=yoff[1]+values[row][1]/2
                 style=dict(arrowstyle="->")    
-                annotate(keys[row],xy=(ind[i]+width,yoff[i]+values[row][i]/2),
-                         xytext=(2.2,averageList(yoff)+averageList(values[row])/2 -.1),
+                annotate(text,xy=(arrow_x,arrow_y),
+                         xytext=(text_x,text_y),#averageList(yoff)+averageList(values[row])/2 -.1),
                          arrowprops=style)
         yoff=yoff+values[row]
     axes1=gca()
     fig1=gcf()
     fig1.set_size_inches(8,8)
+    log1_name = save_dir1.split("/")[-2]
+    log2_name = save_dir2.split("/")[-2]
     axes2=axes1.twinx()
     axes2.set_ylim(0,axes1.get_ylim()[1]/ratio)
     axes1.set_xticks(ind+width/2)
-    axes1.set_xticklabels([save_dir1.split("/")[-2],"Both","Both",save_dir2.split("/")[-2]])
-    savefig(save_dir1+'barIPdataCompare.png',dpi=150)
-    savefig(save_dir2+'barIPdataCompare.png',dpi=150)
+    axes1.set_ylabel("Search Counts in "+log1_name)
+    axes2.set_ylabel("Search Counts in "+log2_name)
+    axes1.set_xticklabels([log1_name,"Both","Both",log2_name])
+    savefig(save_dir1+'barIPdataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
+    savefig(save_dir2+'barIPdataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
     clf()
+    ip_both1,searches_both1=zip(*sorted(both1.iteritems()))
+    ip_both2,searches_both2=zip(*sorted(both2.iteritems()))
+    combined_both=zip(ip_both1,searches_both1,searches_both2)
+    
+    more_log1=0
+    more_log2=0
+    
+    for ip,searches1,searches2 in combined_both:
+        if searches1>searches2:
+            more_log1+=1
+        else:
+            more_log2+=1
+    print "More in "+log1_name+" : "+str(more_log1)
+    print "More in "+log2_name+" : "+str(more_log2)
+        
     
 def analyzeIPData(data,save_dir):
     ip_listing,unique_ip_searches=data
@@ -406,10 +494,13 @@ def analyzeIPData(data,save_dir):
         yoff=yoff+values[row]
     axes1=gca()
     fig1=gcf()
+    log1_name = save_dir.split("/")[-2]
     fig1.set_size_inches(8,8)
     axes1.set_xlim([0,1.5])
     axes1.set_xticks(ind+width/2)
-    axes1.set_xticklabels([save_dir.split("/")[-2]])
+    axes1.set_xticklabels([log1_name])
+    axes1.set_ylabel("Search Counts in "+log1_name)
+
     savefig(save_dir+'barIPdata.png',dpi=150)
     clf()   
     return ip_listing
@@ -445,6 +536,10 @@ def analyzeIPData(data,save_dir):
     '''
 
 def analyzeResultData(data,save_dir):
+    """
+    Result data analysis is still irrelevant, as there is no efficient way to get the
+    number of search results from the logfiles.
+    """
     result_list,author_result_list,title_result_list,eprint_result_list=data
     hist_results, bin_edge=generateHistogram(result_list)
     hist_a_results, bin_edge=generateHistogram(author_result_list)

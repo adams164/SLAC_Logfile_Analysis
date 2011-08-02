@@ -178,10 +178,11 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     for session in session_data_p:
         count+=1
         list_build.append(session)
-        if count>=50000:
+        if count>=25000:
             session_data_parts.append(list_build)
             list_build=[]
             count = 0
+    session_data_parts.append(list_build)
     
     if os.path.isfile(save_location):
         

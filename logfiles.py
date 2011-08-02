@@ -62,6 +62,7 @@ def fullPipeline(filename,force_processing=False,force_read=False,search_data=Tr
         session_ret = analysis.analyzeSessionData(session_data_p, save_dir)
     if term_data:
         term_ret = analysis.analyzeSpiresTermData(term_data_p, save_dir)
+    analysis.analyzeUsage(session_data_p, save_dir)
     print "Done"
     return (search_ret,result_ret,term_ret,IP_ret,session_ret)
 

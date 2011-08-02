@@ -17,11 +17,12 @@ def generateHistogram(data,linear=0):
     else:
         bins=numpy.arange(0,linear,1)
     hist, bin_edge = numpy.histogram(data,bins,new=True)
-    hist[40:80]=hist[40:80]/2
-    hist[80:100]=hist[80:100]/5
-    hist[100:108]=hist[100:108]/10
-    hist[108:113]=hist[108:113]/20
-    hist[113:]=hist[113:]/100
+    if linear==0:
+        hist[40:80]=hist[40:80]/2
+        hist[80:100]=hist[80:100]/5
+        hist[100:108]=hist[100:108]/10
+        hist[108:113]=hist[108:113]/20
+        hist[113:]=hist[113:]/100
     return hist, bin_edge
 
 def averageList(av_list):
