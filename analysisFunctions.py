@@ -42,6 +42,50 @@ def sumValues(dict):
         sum+=value
     return sum
 
+def flattenTwoDeep(list_in):
+    temp = zip(*list_in)
+    final_out=[]
+    for item in temp:
+        temp_2=zip(*item)
+        list_out=[]
+        for flattenable in temp_2:
+            if type(flattenable[0]) is list or type(flattenable[0]) is tuple:
+                element_out=flattenList(flattenable)
+            elif type(flattenable[0]) is dict:
+                element_out=flattenDict(flattenable)
+            else:
+                element_out=flattenInt(flattenable)
+            list_out.append(element_out)
+        final_out.append(list_out)
+    return final_out
+
+def flattenList(list_in):
+    list_out=[]
+    for item in list_in:
+        list_out.extend(item)
+    return list_out
+
+def flattenInt(list_in):
+    try:
+        result = sum(list_in)
+    except TypeError:
+        print type(list_in)
+        print list_in
+        raise Exception
+    return result 
+
+def flattenDict(list_in):
+    dict_out={}
+    for item in list_in:
+        for entry in item:
+            if entry in dict_out:
+                dict_out[entry]+=item[entry]
+            else:
+                dict_out[entry]=item[entry]
+    return dict_out
+
+
+
 def reduceFractions(dict_enter,cutoff):
     dict = {}
     total=sumValues(dict_enter)
@@ -57,11 +101,13 @@ def IPToCountry(ip_listing):
     location_log={}
     gi=GeoIP.open("/usr/share/GeoIP/GeoLiteCity.dat",GeoIP.GEOIP_STANDARD)
     for ip in ip_listing:
-        country = gi.record_by_addr(ip)['country_name']
-        if country in location_log:
-            location_log[country]+=ip_listing[ip]
-        else:
-            location_log[country]=ip_listing[ip]
+        data = gi.record_by_addr(ip)
+        if data:
+            country = data['country_name']
+            if country in location_log:
+                location_log[country]+=ip_listing[ip]
+            else:
+                location_log[country]=ip_listing[ip]
     return location_log
     
 def getSessionKeywords(search_term_list):

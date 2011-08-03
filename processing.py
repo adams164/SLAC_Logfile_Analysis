@@ -63,10 +63,11 @@ def readDataFile(read_from):
 def writeDataParts(data,write_to):
     i=1
     for item in data:
-        cPickle.dump(item,open(write_to+".part"+str(i).zfill(2),'wb'))
+        print "Writing part "+str(i)
+        cPickle.dump(item,open(write_to+".part"+str(i).zfill(3),'wb'))
         i+=1
 def extractData(data_list,save_location,search_data=True,result_data=True,
-                IP_data=True,session_data=True,term_data=True):
+                IP_data=True,session_data=True,term_data=True,one_day=False):
     """Turn the logfile data into usable formats
     
     The five flags for extractData determine which
@@ -95,7 +96,7 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     ip_ignore = dictionaries.ip_ignore#session_list=[]
        
     for data in data_list:
-        print "running file " +str(number)
+        #print "running file " +str(number)
         number+=1
         for entry in data:
             
@@ -161,7 +162,8 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
                     ip_listing[ip]=1
                 else:
                     ip_listing[ip]+=1
-                    
+    
+    #print "Terminating Sessions"
     for ip in ip_active:
         ip_listpair.append((ip,ip_active[ip][0],ip_active[ip][1],ip_active[ip][2],ip_active[ip][3],ip_active[ip][4]))
     
@@ -172,6 +174,7 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     IP_data_p=(ip_listing,unique_ip_searches)
     session_data_p=ip_listpair
     
+    #print "Chopping up Sessions"
     session_data_parts=[]
     count=0
     list_build=[]
@@ -185,7 +188,7 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
     session_data_parts.append(list_build)
     
     if os.path.isfile(save_location):
-        
+        #print "Reading existing Data"
         log_data=readDataFile(save_location)
         if not search_data:
             search_data_p=log_data[0]
@@ -197,8 +200,11 @@ def extractData(data_list,save_location,search_data=True,result_data=True,
             IP_data_p=log_data[3]
         if not session_data:
             session_data_parts=log_data[4:]
-    
-    packaged_data=[search_data_p,result_data_p,term_data_p,IP_data_p]
-    packaged_data.extend(session_data_parts)
+    if not one_day:
+        packaged_data=[search_data_p,result_data_p,term_data_p,IP_data_p]
+        packaged_data.extend(session_data_parts)
+    else:
+        packaged_data=[search_data_p,result_data_p,term_data_p,IP_data_p,(session_data_p,1)]
+
     return packaged_data
     

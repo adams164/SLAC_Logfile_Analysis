@@ -292,40 +292,66 @@ def analyzeSpiresTermData(data,save_dir):
     #print spires_terms
     #print spires_term_count
 
-def compareUsage(date_list1,date_list2,save_dir1,save_dir2,timescale="Days"):
+def compareUsage(data1,data2,save_dir1,save_dir2,timescale="Days"):
+    date_list1,bar_ip_data1,ip_count_list1=data1
+    date_list2,bar_ip_data2,ip_count_list2=data2
     plt = matplotlib.pyplot
     log1_name = save_dir1.split("/")[-2]
     log2_name = save_dir2.split("/")[-2]
     plt.hold(True)
     plt.plot(date_list1,'-or')
     plt.plot(date_list2,'-ob')
+    plt.plot(ip_count_list1,'-sr')
+    plt.plot(ip_count_list2,'-sb')
     axs1=plt.gca()
+    axs2=axs1.twinx()
     axs1.set_xlabel(timescale+" from start")
     axs1.set_ylabel("Number of Multi-Search Sessions")
-    axs1.legend((log1_name,log2_name),loc=0)
+    axs2.set_ylabel("Number of Unique IPs")
+    axs2.set_ylim(axs1.get_ylim())
+    axs1.legend((log1_name.split('-')[0]+" Multi-Sessions",
+                 log2_name.split('-')[0]+" Multi-Sessions",
+                 log1_name.split('-')[0]+" Unique IP count",
+                 log2_name.split('-')[0]+" Unique IP count"),loc=6)
     plt.savefig(save_dir1+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
     plt.savefig(save_dir2+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
     plt.clf()
     
 def analyzeUsage(session_data,save_dir,timescale='Days'):
     date_list=[]
+    ip_date_list=[]
+    bar_ip_data={}
     time_diff=datetime.timedelta(days=1)
     if timescale=='Days':
         time_diff_scale=datetime.timedelta(days=1)
     elif timescale=='Weeks':
         time_diff_scale=datetime.timedelta(days=7)
-    start=session_data[0][2]
+    start=sorted(session_data,key=operator.itemgetter(2))[0][2]
     print start
     for session in session_data:
         ip=session[0]
         searches=session[1]
         session_date=session[2]
         if searches>1:
+            if ip in bar_ip_data:
+                bar_ip_data[ip]+=1
+            else:
+                bar_ip_data[ip]=1
             time_diff=abs(start-session_date)
             multiple=time_diff.days/time_diff_scale.days
-            while multiple>=len(date_list):
-                date_list.append(0)
-            date_list[multiple]+=1
+            if multiple != 4:
+                while multiple>=len(ip_date_list):
+                    ip_date_list.append({})
+                ip_date_list[multiple][ip]=1
+                while multiple>=len(date_list):
+                    date_list.append(0)
+                date_list[multiple]+=1
+    ip_count_list=[]
+    for dict in ip_date_list:
+        ips=len(dict)
+        ip_count_list.append(ips)
+    ip_count_list[4]=(ip_count_list[3]+ip_count_list[5])/2
+    date_list[4]=(date_list[3]+date_list[5])/2
     plt = matplotlib.pyplot
     plt.plot(date_list,'-o')
     axs1=plt.gca()
@@ -333,7 +359,7 @@ def analyzeUsage(session_data,save_dir,timescale='Days'):
     axs1.set_ylabel("Number of Multi-Search Sessions")
     plt.savefig(save_dir+"UsageTimeline.png",dpi=150)
     plt.clf()
-    return date_list
+    return date_list,bar_ip_data,ip_count_list
 
 def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
     ip_listing1=data1
