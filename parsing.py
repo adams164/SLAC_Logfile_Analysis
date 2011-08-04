@@ -20,34 +20,45 @@ def urlArgs(url):
     argd['of']="id"
     return argd
 
-def readLogFileByDay(type,log_dir,write_to,date_start,date_end):
+def readLogFileByDay(type,log_dir,write_to,date_start,date_end,force_read):
+    print force_read
     start_date=datetime.datetime(*(time.strptime(date_start, "%Y%m%d")[0:6]))
     end_date=datetime.datetime(*(time.strptime(date_end, "%Y%m%d")[0:6]))
     INSPIRE_LOG=re.compile('\d{4}_\w\w\w_inspire.log')
     SPIRES_LOG=re.compile('spiface.\d\d-\w\w\w-\d{4}.log')
     log_file_listing = sorted(os.listdir(log_dir))
     if type == "INSPIRE":
-        count_start=1
+        counts=0
         current_day=None
         for log_file in log_file_listing:
+            counts+=1
+            if counts%15==0:
+                print "Read "+str(counts)+" files"
             if INSPIRE_LOG.match(log_file):
                 log_date=datetime.datetime(*(time.strptime(log_file,"%Y_%b_inspire.log")[0:6]))
                 month_okay = log_date.month>=start_date.month and log_date.month<=end_date.month
                 year_okay = log_date.year>=start_date.year and log_date.year<=end_date.year
                 if month_okay and year_okay:
                     readLogFile(log_dir+log_file,write_to,False,
-                                date_start,date_end,count_start,True)
+                                date_start,date_end,1,True)
     elif type == "SPIRES":
-        count_start=1
+        counts=0
         for log_file in log_file_listing:
+            counts+=1
+            if counts%15==0:
+                print "Read "+str(counts)+" files"
             if SPIRES_LOG.match(log_file):
                 log_date=datetime.datetime(*(time.strptime(log_file,"spiface.%d-%b-%Y.log")[0:6]))
+                written_file_exists=os.path.isfile(write_to+'.'+log_date.strftime("%Y%m%d"))
                 month_okay = log_date.month>=start_date.month and log_date.month<=end_date.month
                 year_okay = log_date.year>=start_date.year and log_date.year<=end_date.year
                 day_okay = log_date.day>=start_date.day and log_date.day<=end_date.day
-                if month_okay and year_okay and day_okay:
+                
+                force_okay = (not written_file_exists or force_read)
+                #print force_okay
+                if month_okay and year_okay and day_okay and force_okay:
                     readLogFile(log_dir+log_file,write_to,True,
-                                date_start,date_end,count_start,True)
+                                date_start,date_end,1,True)
     else:
         print "How on earth did you manage this?"
         return

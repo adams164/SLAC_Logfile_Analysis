@@ -316,6 +316,8 @@ def compareUsage(data1,data2,save_dir1,save_dir2,timescale="Days"):
     plt.savefig(save_dir1+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
     plt.savefig(save_dir2+"UsageTimeline--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
     plt.clf()
+    analyzeIPDataCompare(bar_ip_data1, bar_ip_data2, save_dir1,
+                         save_dir2, "Multi-Search Sessions","Usage")
     
 def analyzeUsage(session_data,save_dir,timescale='Days'):
     date_list=[]
@@ -328,6 +330,8 @@ def analyzeUsage(session_data,save_dir,timescale='Days'):
         time_diff_scale=datetime.timedelta(days=7)
     start=sorted(session_data,key=operator.itemgetter(2))[0][2]
     print start
+    bad_date=datetime.datetime(2011,6,1)
+    bad_multi=abs(start-bad_date).days/time_diff_scale.days
     for session in session_data:
         ip=session[0]
         searches=session[1]
@@ -339,7 +343,7 @@ def analyzeUsage(session_data,save_dir,timescale='Days'):
                 bar_ip_data[ip]=1
             time_diff=abs(start-session_date)
             multiple=time_diff.days/time_diff_scale.days
-            if multiple != 4:
+            if multiple != bad_multi:
                 while multiple>=len(ip_date_list):
                     ip_date_list.append({})
                 ip_date_list[multiple][ip]=1
@@ -350,8 +354,15 @@ def analyzeUsage(session_data,save_dir,timescale='Days'):
     for dict in ip_date_list:
         ips=len(dict)
         ip_count_list.append(ips)
-    ip_count_list[4]=(ip_count_list[3]+ip_count_list[5])/2
-    date_list[4]=(date_list[3]+date_list[5])/2
+    if bad_multi==0:
+        ip_count_list[0]=(ip_count_list[1])
+        date_list[0]=(date_list[1])
+    elif bad_multi==len(date_list)-1:
+        ip_count_list[bad_multi]=(ip_count_list[bad_multi-1])
+        date_list[bad_multi]=(date_list[bad_multi-1])
+    elif bad_multi<len(date_list):
+        ip_count_list[bad_multi]=(ip_count_list[bad_multi-1]+ip_count_list[bad_multi+1])/2
+        date_list[bad_multi]=(date_list[bad_multi-1]+date_list[bad_multi+1])/2
     plt = matplotlib.pyplot
     plt.plot(date_list,'-o')
     axs1=plt.gca()
@@ -361,7 +372,7 @@ def analyzeUsage(session_data,save_dir,timescale='Days'):
     plt.clf()
     return date_list,bar_ip_data,ip_count_list
 
-def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
+def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2,metric='Search Counts',save='IP'):
     ip_listing1=data1
     ip_listing2=data2
     
@@ -383,10 +394,22 @@ def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
     print sumValues(both1)
     print sumValues(both2)
     
-    location_log_ip1=reduceFractions(IPToCountry(ip1),0.05)
-    location_log_ip2=reduceFractions(IPToCountry(ip2),0.05)
-    location_log_both1=reduceFractions(IPToCountry(both1),0.05)
-    location_log_both2=reduceFractions(IPToCountry(both2),0.05)
+    location_log_ip1=IPToCountry(ip1)
+    location_log_ip2=IPToCountry(ip2)
+    location_log_both1=IPToCountry(both1)
+    location_log_both2=IPToCountry(both2)
+    
+    ctry_set=set()
+    ctry_set=ctry_set.union(reduceFractions(location_log_ip1, 0.05))
+    ctry_set=ctry_set.union(reduceFractions(location_log_ip2, 0.05))
+    ctry_set=ctry_set.union(reduceFractions(location_log_both1, 0.05))
+    ctry_set=ctry_set.union(reduceFractions(location_log_both2, 0.05))
+    
+    location_log_ip1=reduceToSet(location_log_ip1,ctry_set)
+    location_log_ip2=reduceToSet(location_log_ip2,ctry_set)
+    location_log_both1=reduceToSet(location_log_both1,ctry_set)
+    location_log_both2=reduceToSet(location_log_both2,ctry_set)
+    
     
     for country in location_log_ip1:
         if not country in location_log_ip2:
@@ -489,11 +512,11 @@ def analyzeIPDataCompare(data1,data2,save_dir1,save_dir2):
     axes2=axes1.twinx()
     axes2.set_ylim(0,axes1.get_ylim()[1]/ratio)
     axes1.set_xticks(ind+width/2)
-    axes1.set_ylabel("Search Counts in "+log1_name)
-    axes2.set_ylabel("Search Counts in "+log2_name)
+    axes1.set_ylabel(metric+" in "+log1_name)
+    axes2.set_ylabel(metric+" in "+log2_name)
     axes1.set_xticklabels([log1_name,"Both","Both",log2_name])
-    savefig(save_dir1+'barIPdataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
-    savefig(save_dir2+'barIPdataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
+    savefig(save_dir1+'bar'+save+'dataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
+    savefig(save_dir2+'bar'+save+'dataCompare.png',dpi=150,bbox_inches='tight',pad_inches=0.3)
     clf()
     ip_both1,searches_both1=zip(*sorted(both1.iteritems()))
     ip_both2,searches_both2=zip(*sorted(both2.iteritems()))

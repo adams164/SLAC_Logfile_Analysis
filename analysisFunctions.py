@@ -42,6 +42,7 @@ def sumValues(dict):
         sum+=value
     return sum
 
+
 def flattenTwoDeep(list_in):
     temp = zip(*list_in)
     final_out=[]
@@ -84,18 +85,25 @@ def flattenDict(list_in):
                 dict_out[entry]=item[entry]
     return dict_out
 
-
+def reduceToSet(dict_in,reduction_set):
+    dict_out={'Others':0}
+    for country in dict_in:
+        if country in reduction_set:
+            dict_out[country]=dict_in[country]
+        else:
+            dict_out['Others']+=dict_in[country]
+    return dict_out
 
 def reduceFractions(dict_enter,cutoff):
-    dict = {}
+    dict_out = {}
     total=sumValues(dict_enter)
-    dict['Others']=0
+    dict_out['Others']=0
     for country in dict_enter:
         if float(dict_enter[country])/float(total)<cutoff:
-            dict['Others']+=dict_enter[country]
+            dict_out['Others']+=dict_enter[country]
         else:
-            dict[country]=dict_enter[country]
-    return dict
+            dict_out[country]=dict_enter[country]
+    return dict_out
 
 def IPToCountry(ip_listing):
     location_log={}
