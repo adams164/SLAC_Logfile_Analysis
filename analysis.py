@@ -277,6 +277,32 @@ def analyzeSessionData(raw_data,save_dir):
     g_s_s.hardcopy(save_dir+'data_session_searches.png',terminal='png')
     g_s_t.reset()
     g_s_s.reset()
+    return session_searches
+
+def compareSessionData(session_searches1,session_searches2,save_dir1,save_dir2):
+    hist_session_searches1, bin_edge_ss = generateHistogram(session_searches1,100)    
+    hist_session_searches2, bin_edge_ss = generateHistogram(session_searches2,100)
+    log1_name = save_dir1.split("/")[-2]
+    log2_name = save_dir2.split("/")[-2]
+    ratio = float(hist_session_searches1[2])/float(hist_session_searches2[2])
+    hist_session_searches2*=ratio
+    plt = matplotlib.pyplot
+    plt.hold(True)
+    plt.plot(hist_session_searches1,'or')
+    plt.plot(hist_session_searches2,'sb')
+    axs1=plt.gca()
+    axs1.set_yscale('log')
+    axs2=axs1.twinx()
+    axs2.set_yscale('log')
+    axs1.set_xlabel("Searches in Session")
+    axs1.set_ylabel("Number of Sessions in "+log1_name)
+    axs2.set_ylabel("Number of Sessions in "+log2_name)
+    axs2.set_ylim(axs1.get_ylim()[0],axs1.get_ylim()[1]/ratio)
+    axs1.legend((log1_name,log2_name))
+    plt.savefig(save_dir1+"SessionData--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
+    plt.savefig(save_dir2+"SessionData--"+log1_name+"--vs--"+log2_name+".png",dpi=150)
+    plt.clf()
+
 
 def analyzeSpiresTermData(data,save_dir):
     spires_terms,spires_term_count,searches=data

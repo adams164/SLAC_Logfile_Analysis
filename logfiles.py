@@ -182,7 +182,8 @@ def compare(filename1,filename2,force_processing,
     if IP: 
         analysis.analyzeIPDataCompare(log_1_data[3], log_2_data[3],
                                       save_dir1, save_dir2)
-
+    analysis.compareSessionData(log_1_data[4], log_2_data[4],
+                                save_dir1, save_dir2)
 
 def evalArgs(segments):
         force_processing=False
