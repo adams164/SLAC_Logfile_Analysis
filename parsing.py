@@ -77,7 +77,7 @@ def readLogFile(filename,write_to,spires_log=False,date_start="19910416",
     if spires_log:
         HEP = re.compile('\( in hep')
         SEARCH_LEAD = re.compile('GET /search?')
-        SEARCH = re.compile('(p|p1|p2)=(?P<term>.*?)(&| )')
+        SEARCH = re.compile('(p|p1|p2)=(?P<term>.*?)(&| |$)')
         TIME_STAMP = re.compile('\d{8} \d\d:\d\d:\d\d')
         GOOGLEBOT = re.compile('ooglebot')
         f = open(filename)
@@ -131,7 +131,7 @@ def readLogFile(filename,write_to,spires_log=False,date_start="19910416",
         dumps+=1
     else:
         SEARCH_LEAD = re.compile('GET /search?')
-        SEARCH = re.compile('(p|p1|p2)=(?P<term>.*?)(&| )')
+        SEARCH = re.compile('(p|p1|p2)=(?P<term>.*?)(&| |$)')
         TIME_STAMP = re.compile('\[(?P<time>.*?)( .*?)\]')
         GOOGLEBOT = re.compile('ooglebot')
         f = open(filename)
